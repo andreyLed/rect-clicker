@@ -1,56 +1,68 @@
-
-var rectPool = [];
-var maxRect = 5;
-Rect.prototype.maxWaitTime = 3000;
-Rect.prototype.maxSpeed = 2;
-Rect.prototype.size = 30;
-var isPlay = false;
-
-function initGame() {
+function game(maxRect) {
+  var rectPool = [];
+  var isPlay = false;
   var canvas = document.getElementById('canvas');
+  var context = canvas.getContext('2d');
   var counter = document.getElementById('score');
   var elemLeft = canvas.offsetLeft;
   var elemTop = canvas.offsetTop;
-  var ctx = canvas.getContext('2d');
+  var startBtn = document.getElementsByClassName('start-button')[0];
+  var stopBtn = document.getElementsByClassName('stop-button')[0];
 
-  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+  function initGame() {
+    reset();
 
-  for (var i = 0; i < maxRect; i++) {
-    rectPool[i] = new Rect();
-    rectPool[i].propsRandomizer();
+    canvas.addEventListener('click', function (event) {
+      var x = event.pageX - elemLeft;
+      var y = event.pageY - elemTop;
+      rectPool.forEach(function (element) {
+        if (x > element.x && x < element.x + element.size && y > element.y && y < element.y + element.size) {
+          counter.textContent = ' ' + (Number(counter.textContent) + 1) + ' ';
+          element.propsRandomizer();
+        }
+      });
+    }, false);
+
+    startBtn.addEventListener('click', start);
+    stopBtn.addEventListener('click', stop);
   }
 
-  canvas.addEventListener('click', function (event) {
-    var x = event.pageX - elemLeft;
-    var y = event.pageY - elemTop;
+  function reset() {
+    rectPool = [];
+    for (var i = 0; i < maxRect; i++) {
+      rectPool[i] = new Rect();
+      rectPool[i].propsRandomizer();
+    }
+    counter.textContent = ' 0';
+    context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+  }
 
-    rectPool.forEach(function (element) {
-      if (x > element.x && x < element.x + element.size && y > element.y && y < element.y + element.size) {
-        counter.textContent = ' ' + (Number(counter.textContent) + 1) + ' ';
-        element.propsRandomizer();
+  function start() {
+    reset();
+    isPlay = true;
+    animate();
+    startBtn.removeEventListener('click', start);
+  }
+
+  function stop() {
+    reset();
+    isPlay = false;
+    startBtn.addEventListener('click', start);
+  }
+
+  function animate() {
+    context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+    rectPool.forEach(function (rect) {
+      if (Date.now() > rect.startTime) {
+        rect.draw(context);
       }
-    });
+    })
+    if (isPlay) {
+      requestAnimationFrame(animate);
+    }
+  }
 
-  }, false);
-}
-
-function resetGame() {
-  var counter = document.getElementById('score');
-  counter.textContent = ' 0';
-  var canvas = document.getElementById('canvas');
-  var ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-}
-
-function start() {
-  resetGame();
-  isPlay = true;
-  animate();
-}
-
-function stop() {
-  isPlay = false;
-  
+  initGame();
 }
 
 //Класс для создания квадратов
@@ -70,29 +82,15 @@ Rect.prototype.draw = function (context) {
 Rect.prototype.propsRandomizer = function () {
   this.x = getRandom({ type: 'position', max: (canvas.clientWidth - this.size), min: this.size });
   this.y = 0;
-  this.color = 'red';
+  this.color = getRandom({ type: 'color' });
   this.speed = getRandom({ type: 'speed', max: this.maxSpeed, min: 1 });
   this.startTime = getRandom({ type: 'time', max: this.maxWaitTime });
-}
-
-function animate() {
-  var canvas = document.getElementById('canvas');
-  var context = canvas.getContext('2d');
-  context.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
-  rectPool.forEach(function (rect) {
-    if (Date.now() > rect.startTime) {
-      rect.draw(context);
-    }
-  })
-  if(isPlay) {
-  requestAnimationFrame(animate);
-  }
 }
 
 function getRandom(randomObject) {
   switch (randomObject.type) {
     case 'color':
-      return;
+      return 'rgb(' + randomRGBChanel() + ',' + randomRGBChanel() + ',' + randomRGBChanel() + ')';
     case 'time':
       return Date.now() + Math.round(Math.random() * randomObject.max);
     case 'position':
@@ -103,12 +101,14 @@ function getRandom(randomObject) {
   }
 }
 
+function randomRGBChanel() {
+  return Math.floor(Math.random() * 255);
+}
 
-
-document.body.onload = function () {
-  document.getElementsByClassName('start-button')[0].addEventListener('click', start);
-
-  document.getElementsByClassName('stop-button')[0].addEventListener('click', stop);
-  initGame();
-
-};
+document.addEventListener("DOMContentLoaded", function () {
+  var maxRect = 5;
+  Rect.prototype.maxWaitTime = 3000;
+  Rect.prototype.maxSpeed = 2;
+  Rect.prototype.size = 30;
+  game(maxRect);
+});
