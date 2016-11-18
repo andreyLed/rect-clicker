@@ -90,7 +90,7 @@ Rect.prototype.propsRandomizer = function () {
 function getRandom(randomObject) {
   switch (randomObject.type) {
     case 'color':
-      return 'rgb(' + randomRGBChanel() + ',' + randomRGBChanel() + ',' + randomRGBChanel() + ')';
+      return 'rgb(' + randomRGBChanelValue() + ',' + randomRGBChanelValue() + ',' + randomRGBChanelValue() + ')';
     case 'time':
       return Date.now() + Math.round(Math.random() * randomObject.max);
     case 'position':
@@ -101,14 +101,17 @@ function getRandom(randomObject) {
   }
 }
 
-function randomRGBChanel() {
+function randomRGBChanelValue() {
   return Math.floor(Math.random() * 255);
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  var maxRect = 5;
+  //Default value
+  var maxRect = 10;
   Rect.prototype.maxWaitTime = 3000;
   Rect.prototype.maxSpeed = 2;
   Rect.prototype.size = 30;
+  
+  //game start
   game(maxRect);
 });
